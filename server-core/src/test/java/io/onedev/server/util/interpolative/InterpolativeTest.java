@@ -3,11 +3,13 @@ package io.onedev.server.util.interpolative;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class InterpolativeTest {
 
 	@Test
+	@Tag("system")
 	public void test() {
 		assertEquals("@", Interpolative.parse("@@").interpolateWith(it->"!"));
 		assertEquals("@@", Interpolative.parse("@@@@").interpolateWith(it->it));

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import io.onedev.commons.codeassist.CodeAssist;
@@ -40,6 +41,7 @@ public class PullRequestQueryGrammarTest {
 	};
 
 	@Test
+	@Tag("system")
 	public void test()	{
 		List<? extends InputStatus> suggestions;
 		

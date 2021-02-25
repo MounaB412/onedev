@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -15,6 +16,7 @@ import io.onedev.server.git.AbstractGitTest;
 public class LogCommandTest extends AbstractGitTest {
 
 	@Test
+	@Tag("system")
 	public void test() throws Exception {
 		addFile("testfile", ""
 				+ "1st line\n"

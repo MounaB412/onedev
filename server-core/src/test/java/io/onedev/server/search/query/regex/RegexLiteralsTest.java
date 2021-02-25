@@ -3,6 +3,7 @@ package io.onedev.server.search.query.regex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.base.Splitter;
@@ -12,6 +13,7 @@ import io.onedev.server.search.code.query.regex.RegexLiterals;
 public class RegexLiteralsTest {
 
 	@Test
+	@Tag("system")
 	public void test() {
 		assertEquals("", new RegexLiterals("").toString());
 		assertEquals("a", new RegexLiterals("a").toString());

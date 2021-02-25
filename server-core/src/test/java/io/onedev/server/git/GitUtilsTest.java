@@ -16,6 +16,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -27,6 +28,7 @@ import io.onedev.commons.utils.ZipUtils;
 public class GitUtilsTest extends AbstractGitTest {
 
 	@Test
+	@Tag("acceptance")
 	public void testRebaseWithoutConflicts() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -65,6 +67,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 
 	@Test
+	@Tag("acceptance")
 	public void testRebaseWithoutChange() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -79,6 +82,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testRebaseWithConflicts() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -92,6 +96,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testRebaseWithEmptyCommit() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -131,6 +136,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("acceptance")
 	public void testMergeWithoutConflicts() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -159,6 +165,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void testMergeWithContentConflict() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -185,6 +192,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("integration")
 	public void testMergeWithDeletionAndModificationConflict() throws Exception {
 		addFileAndCommit("file", "", "initial commit");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -209,6 +217,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("integration")
 	public void testMergeWithBindaryConflict() throws Exception {
 		addFileAndCommit("file", "", "initial commit");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -276,6 +285,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("integration")
 	public void testMergeWithFileAndFolderConflict() throws Exception {
 		addFileAndCommit("file", "", "initial commit");
 		git.checkout().setCreateBranch(true).setName("dev").call();
@@ -323,6 +333,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}	
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testMergeWithLinkAndLinkConflict() throws Exception {
 		File tempDir;
 		
@@ -358,6 +369,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("integration")
 	public void testMergeWithLinkAndFileConflict() throws Exception {
 		File tempDir;
 		
@@ -407,6 +419,7 @@ public class GitUtilsTest extends AbstractGitTest {
 	}	
 	
 	@Test
+	@Tag("integration")
 	public void testMergeWithLinkAndDirConflict() throws Exception {
 		File tempDir;
 		

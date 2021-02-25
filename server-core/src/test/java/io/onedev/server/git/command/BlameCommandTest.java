@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import io.onedev.commons.utils.LinearRange;
@@ -13,6 +14,7 @@ import io.onedev.server.git.BlameBlock;
 public class BlameCommandTest extends AbstractGitTest {
 
 	@Test
+	@Tag("system")
 	public void test() throws Exception {
 		addFileAndCommit(
 				"file", 

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.function.Function;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -13,6 +14,7 @@ import io.onedev.server.util.interpolative.Interpolative;
 public class InterpolativePatternSetGrammarTest {
 
 	@Test
+	@Tag("system")
 	public void test() {
 		Function<String, String> interpolator = new Function<String, String>() {
 

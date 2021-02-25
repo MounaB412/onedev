@@ -18,6 +18,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -30,6 +31,7 @@ import io.onedev.server.git.exception.ObsoleteCommitException;
 public class BlobEditsTest extends AbstractGitTest {
 
 	@Test
+	@Tag("acceptance")
 	public void testRemoveFile() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -56,6 +58,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("unit")
 	public void testRemoveNonExistentFile() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -78,6 +81,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("acceptance")
 	public void testMoveFiles() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -110,6 +114,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("system")
 	public void shouldFailIfOldPathIsTreeWhenRename() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -136,6 +141,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("system")
 	public void shouldFailIfNewPathIsNotUnderTreeWhenRename() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -160,6 +166,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("acceptance")
 	public void testAddFile() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -207,6 +214,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("unit")
 	public void testAddDuplicates() throws IOException {
 		addFileAndCommit("file", "", "first commit");
 				
@@ -225,6 +233,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("integration")
 	public void testOrder() throws IOException {
 		addFileAndCommit("file", "", "first commit");
 		createDir("client/security");
@@ -269,6 +278,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("acceptance")
 	public void testModifyFile() throws IOException {
 		createDir("a");
 		addFileAndCommit("a/file.java", "", "add a/file.java");
@@ -306,6 +316,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testOverwriteExistFile() throws IOException {
 		createDir("client");
 		addFileAndCommit("client/a.java", "a", "add a");
@@ -348,6 +359,7 @@ public class BlobEditsTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testObsoleteOldCommit() throws IOException {
 		addFileAndCommit("a.java", "a", "add a");
 		

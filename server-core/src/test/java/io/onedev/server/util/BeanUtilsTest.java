@@ -6,10 +6,12 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class BeanUtilsTest {
 
+	@Tag("acceptance")
 	@Test
 	public void shouldFindGetter() {
 		Method getter = BeanUtils.findGetter(SubClass.class, "value");
@@ -22,6 +24,7 @@ public class BeanUtilsTest {
 	}
 
 	@Test
+	@Tag("acceptance")
 	public void shouldFindSetter() {
 		Method getter = BeanUtils.findGetter(SubClass.class, "value");
 		assertTrue(BeanUtils.findSetter(getter) == null);

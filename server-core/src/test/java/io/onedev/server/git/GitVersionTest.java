@@ -4,11 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class GitVersionTest {
 
 	@Test
+	@Tag("system")
 	public void shouldCompareVersionCorrectly() {
 		assertTrue(new GitVersion("1.8.3.msysgit.0").isOlderThan(new GitVersion("1.8.4.0")));
 		assertTrue(new GitVersion("1.8.3").isNotOlderThan(new GitVersion("1.8.3.0")));
@@ -20,11 +22,13 @@ public class GitVersionTest {
 	}
 
 	@Test
+	@Tag("system")
 	public void shouldHandleMsysgitCorrectly() {
 		assertTrue(new GitVersion("1.8.3.msysgit.0").isMsysgit());
 	}
 	
 	@Test
+	@Tag("system")
 	public void shouldConvertToStringCorrectly() {
 		assertEquals(new GitVersion("1.8.3.msysgit.0").toString(), "1.8.3.0");
 		assertEquals(new GitVersion("1.8.3.05").toString(), "1.8.3.5");

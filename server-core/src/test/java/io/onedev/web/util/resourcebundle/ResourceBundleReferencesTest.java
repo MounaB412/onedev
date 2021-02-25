@@ -3,6 +3,7 @@ package io.onedev.web.util.resourcebundle;
 import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.request.resource.CssResourceReference;
+import org.junit.jupiter.api.Tag;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,6 +24,7 @@ import com.google.common.collect.Lists;
 public class ResourceBundleReferencesTest {
 
 	@Test
+	@Tag("system")
 	public void testa() {
 		ResourceBundleReferences references = new ResourceBundleReferences(Js1ResourceReferenceA.class);
 		Assert.assertEquals(1, references.getJavaScriptBundles().size());
@@ -35,6 +37,7 @@ public class ResourceBundleReferencesTest {
 	}
 
 	@Test
+	@Tag("system")
 	public void testb() {
 		ResourceBundleReferences references = new ResourceBundleReferences(Js1ResourceReferenceB.class);
 		
@@ -50,6 +53,7 @@ public class ResourceBundleReferencesTest {
 	}
 	
 	@Test
+	@Tag("system")
 	public void testc() {
 		ResourceBundleReferences references = new ResourceBundleReferences(Js1ResourceReferenceC.class);
 
