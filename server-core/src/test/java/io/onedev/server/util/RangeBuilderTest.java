@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -11,6 +12,7 @@ import com.google.common.collect.Lists;
 public class RangeBuilderTest {
 
 	@Test
+	@Tag("unit")
 	public void test() {
 		List<List<Long>> ranges = new RangeBuilder(Lists.newArrayList(2L, 3L, 6L, 8L, 9L), Lists.newArrayList(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)).getRanges();
 		assertEquals(3, ranges.size());

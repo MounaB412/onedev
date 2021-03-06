@@ -3,11 +3,13 @@ package io.onedev.server.util;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
 
 
 public class UrlUtilsTest {
 
 	@Test
+	@Tag("acceptance")
 	public void testDescribe() {
 		assertEquals("File", UrlUtils.describe("file"));
 		assertEquals("File", UrlUtils.describe("dir/file.txt"));

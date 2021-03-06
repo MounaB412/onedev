@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -16,6 +17,7 @@ import com.google.common.collect.Lists;
 public class MatrixRunnerTest {
 
 	@Test
+	@Tag("system")
 	public void test() {
 		Map<String, List<String>> matrix = new LinkedHashMap<>();
 		

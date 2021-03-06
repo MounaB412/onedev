@@ -7,6 +7,7 @@ import java.util.Map;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.LastCommitsOfChildren.Cache;
 import org.eclipse.jgit.revwalk.LastCommitsOfChildren.Value;
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import io.onedev.server.git.AbstractGitTest;
@@ -14,6 +15,7 @@ import io.onedev.server.git.AbstractGitTest;
 public class LastCommitsOfChildrenTest extends AbstractGitTest {
 
 	@Test
+	@Tag("fonctionnel")
 	public void testMergeWithoutTouchingSameFile() throws Exception {
 		addFileAndCommit("initial", "", "initial commit");
 		git.checkout().setName("dev").setCreateBranch(true).call();
@@ -29,6 +31,7 @@ public class LastCommitsOfChildrenTest extends AbstractGitTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void testMergeTouchingSameFile() throws Exception {
 		addFileAndCommit("file", "1\n2\n3\n4\n5\n", "initial commit");
 		git.checkout().setName("dev").setCreateBranch(true).call();
@@ -42,6 +45,7 @@ public class LastCommitsOfChildrenTest extends AbstractGitTest {
 	}
 
 	@Test
+	@Tag("integration")
 	public void testDirAndFile() throws Exception {
 		createDir("dir/dir1/subdir");
 		createDir("dir/dir2");
@@ -58,6 +62,7 @@ public class LastCommitsOfChildrenTest extends AbstractGitTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void testWithCache() throws Exception {
 		addFileAndCommit("initial", "", "initial commit");
 		git.checkout().setName("feature1").setCreateBranch(true).call();

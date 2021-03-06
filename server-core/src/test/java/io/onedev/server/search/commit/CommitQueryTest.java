@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import io.onedev.server.event.RefUpdated;
@@ -17,6 +18,7 @@ import io.onedev.server.model.User;
 public class CommitQueryTest extends AbstractGitTest {
 
 	@Test
+	@Tag("system")
 	public void testMatches() throws Exception {
 		addFileAndCommit("initial", "", "initial");
 		git.checkout().setCreateBranch(true).setName("dev").call();

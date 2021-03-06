@@ -5,11 +5,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class VersionTest {
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldDecodeVersionStringCorrectly() {
 		Version version = new Version("1.2.3-build-100");
 		assertEquals(version.toString(), "1.2.3-build-100");
@@ -22,6 +24,7 @@ public class VersionTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldConstructVersionCorrectly() {
 		Version version = new Version(1, 2, 3, "beta", 100);
 		assertEquals(version.toString(), "1.2.3-beta-100");
@@ -49,6 +52,7 @@ public class VersionTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldCompareVersionCorrectly() {
 		assertTrue(new Version("1").compareTo(new Version("1")) == 0);
 		assertTrue(new Version("1.0.1").compareTo(new Version("1.0.1")) == 0);
@@ -64,6 +68,7 @@ public class VersionTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldHandleCompatibleVersions() {
 		assertTrue(new Version("1.0").isCompatible(new Version("1.0.1")));
 		assertFalse(new Version("1.0").isCompatible(new Version("1.1")));

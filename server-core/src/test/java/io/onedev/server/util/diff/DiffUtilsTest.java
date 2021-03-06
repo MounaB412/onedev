@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -11,6 +12,7 @@ import com.google.common.collect.Lists;
 public class DiffUtilsTest extends DiffUtils {
 
 	@Test
+	@Tag("system")
 	public void testIsVisible() {
 		List<String> oldLines = Lists.newArrayList("1", "2", "3", "4a", "5a", "6", "7", "8");
 		List<String> newLines = Lists.newArrayList("1", "2", "3", "4b", "5b", "7", "8", "9", "10");

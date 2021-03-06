@@ -19,3 +19,4 @@ pom.xml.releaseBackup
 *.bak
 *~.nib
 *.DS_Store
+/.metadata/

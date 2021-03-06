@@ -3,11 +3,13 @@ package io.onedev.server.util.match;
 import static io.onedev.server.util.match.WildcardUtils.*;
 import static org.junit.Assert.*;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class WildcardUtilsTest {
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldMatchPath() {
 		assertTrue(matchPath("**//*.java", "com/example/Test.java"));
 		assertFalse(matchPath("**/*.java", "com/example/test.c"));
@@ -20,6 +22,7 @@ public class WildcardUtilsTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void shouldMatchString() {
 		assertTrue(matchString("hello?world", "hello world"));
 		assertFalse(matchString("hello?world", "hello  world"));
@@ -34,6 +37,7 @@ public class WildcardUtilsTest {
 	}
 
 	@Test
+	@Tag("fonctionnel")
 	public void testRangeOfMatch() {
 		assertEquals("1-3", rangeOfMatch("el", "hello").toString());
 		assertEquals(null, rangeOfMatch("tu", "hello"));
@@ -43,6 +47,7 @@ public class WildcardUtilsTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void shouldApplyPattern() {
 		assertEquals("he*?lo:1-5", applyPattern("E*?l", "hello", false).toString());
 		assertEquals(null, applyPattern("*he ?d", "hello world", false));

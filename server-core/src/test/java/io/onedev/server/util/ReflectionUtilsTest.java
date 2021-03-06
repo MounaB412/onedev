@@ -5,6 +5,7 @@ import static org.junit.Assert.assertSame;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -20,6 +21,7 @@ public class ReflectionUtilsTest {
 	private static class SubClass3 extends SubClass2<Integer> {}
 
 	@Test
+	@Tag("fonctionnel")
 	public void shouldResolveTypeArg() {
 		List<?> typeArguments = ReflectionUtils.getTypeArguments(SuperClass.class, SubClass1.class);
 		assertSame(String.class, typeArguments.get(0));
@@ -37,6 +39,7 @@ public class ReflectionUtilsTest {
 	}
 	
 	@Test
+	@Tag("fonctionnel")
 	public void shouldFindMethodCorrectly() {
 		Method method = ReflectionUtils.findMethod(SubClass4.class, "method", String.class, int.class);
 		assertSame(method.getReturnType(), String.class);

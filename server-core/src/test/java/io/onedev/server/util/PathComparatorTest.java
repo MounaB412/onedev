@@ -2,11 +2,13 @@ package io.onedev.server.util;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.Test;
 
 public class PathComparatorTest {
 
 	@Test
+	@Tag("fonctionnel")
 	public void test() {
 		assertEquals(new PathComparator().compare("a/b", "b"), -1);
 		assertEquals(new PathComparator().compare("a", "b"), -1);
