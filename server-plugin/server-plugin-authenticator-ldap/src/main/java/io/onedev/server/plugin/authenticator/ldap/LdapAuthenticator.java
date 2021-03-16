@@ -185,25 +185,8 @@ public class LdapAuthenticator extends Authenticator {
         userSearchFilter = StringUtils.replace(userSearchFilter, "\\", "\\\\");
         logger.debug("Evaluated user search filter: " + userSearchFilter);
         
-        SearchControls searchControls = new SearchControls();
-        searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        List<String> attributeNames = new ArrayList<String>();
-        if (getUserFullNameAttribute() != null)
-            attributeNames.add(getUserFullNameAttribute());
-        
-        if (getUserSshKeyAttribute() != null)
-        	attributeNames.add(getUserSshKeyAttribute());
-        
-        attributeNames.add(getUserEmailAttribute());
-        
-        if (getGroupRetrieval() instanceof GetGroupsUsingAttribute) {
-        	GetGroupsUsingAttribute groupRetrieval = (GetGroupsUsingAttribute)getGroupRetrieval();
-            attributeNames.add(groupRetrieval.getUserGroupsAttribute());
-        }
-        searchControls.setReturningAttributes((String[]) attributeNames.toArray(new String[0]));
-        searchControls.setReturningObjFlag(true);
-
-        Hashtable<String, String> ldapEnv = new Hashtable<>();
+        SearchControls searchControls = searchControls();
+		Hashtable<String, String> ldapEnv = new Hashtable<>();
         ldapEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         ldapEnv.put(Context.PROVIDER_URL, getLdapUrl());
         ldapEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
@@ -227,26 +210,11 @@ public class LdapAuthenticator extends Authenticator {
             if (results == null || !results.hasMore()) 
                 throw new UnknownAccountException("Unknown account");
             
-            SearchResult searchResult = (SearchResult) results.next();
-            String userDN = searchResult.getNameInNamespace();
-            if (!searchResult.isRelative()) {
-            	StringBuffer buffer = new StringBuffer();
-                buffer.append(StringUtils.substringBefore(searchResult.getName(), "//"));
-                buffer.append("//");
-                buffer.append(StringUtils.substringBefore(
-                		StringUtils.substringAfter(searchResult.getName(), "//"), "/"));
-                
-                ldapEnv.put(Context.PROVIDER_URL, buffer.toString());
-                logger.debug("Binding to referral ldap url '" + buffer.toString() + "'...");
-                referralCtx = new InitialDirContext(ldapEnv);
-            }
-            if (userDN.startsWith("ldap")) {
-            	userDN = StringUtils.substringAfter(userDN, "//");
-            	userDN = StringUtils.substringAfter(userDN, "/");
-            }
-
-            ldapEnv.put(Context.SECURITY_PRINCIPAL, userDN);
-            ldapEnv.put(Context.SECURITY_CREDENTIALS, new String(token.getPassword()));
+            referralCtx = referralCtx(token, ldapEnv, referralCtx, results);
+			String userDN = userDN(results);
+			sshKeys = sshKeys(sshKeys, results);
+			fullName = fullName(fullName, results);
+			SearchResult searchResult = (SearchResult) results.next();
             DirContext userCtx = null;
             try {
                 logger.debug("Authenticating user by binding as '" + userDN + "'...");
@@ -265,21 +233,12 @@ public class LdapAuthenticator extends Authenticator {
             Attributes searchResultAttributes = searchResult.getAttributes();
             
             if (searchResultAttributes != null) {
-                if (getUserFullNameAttribute() != null) {
-                    Attribute attribute = searchResultAttributes.get(getUserFullNameAttribute());
-                    if (attribute != null && attribute.get() != null)
-                        fullName = (String) attribute.get();
-                }
-                
                 Attribute attribute = searchResultAttributes.get(getUserEmailAttribute());
                 if (attribute != null && attribute.get() != null)
                     email = (String) attribute.get();
                 
                 if (getGroupRetrieval() instanceof GetGroupsUsingAttribute) 
                 	groupNames = retrieveGroupsByAttribute(ctx, referralCtx, searchResultAttributes);
-                
-                if (getUserSshKeyAttribute() != null) 
-                	sshKeys = retrieveSshKeys(searchResultAttributes);
             }
             
             if (getGroupRetrieval() instanceof SearchGroupsUsingFilter) 
@@ -305,6 +264,90 @@ public class LdapAuthenticator extends Authenticator {
                 }
             }
         }
+	}
+
+	private DirContext referralCtx(UsernamePasswordToken token, Hashtable<String, String> ldapEnv,
+			DirContext referralCtx, NamingEnumeration<SearchResult> results) throws NamingException {
+		ldapEnv(token, ldapEnv, results);
+		SearchResult searchResult = (SearchResult) results.next();
+		if (!searchResult.isRelative()) {
+			referralCtx = new InitialDirContext(ldapEnv);
+		}
+		return referralCtx;
+	}
+
+	private void ldapEnv(UsernamePasswordToken token, Hashtable<String, String> ldapEnv,
+			NamingEnumeration<SearchResult> results) throws NamingException {
+		String userDN = userDN(results);
+		SearchResult searchResult = (SearchResult) results.next();
+		if (!searchResult.isRelative()) {
+			StringBuffer buffer = buffer(token, ldapEnv, userDN, searchResult);
+		}
+	}
+
+	private String fullName(String fullName, NamingEnumeration<SearchResult> results) throws NamingException {
+		SearchResult searchResult = (SearchResult) results.next();
+		Attributes searchResultAttributes = searchResult.getAttributes();
+		if (searchResultAttributes != null) {
+			if (getUserFullNameAttribute() != null) {
+				Attribute attribute = searchResultAttributes.get(getUserFullNameAttribute());
+				if (attribute != null && attribute.get() != null)
+					fullName = (String) attribute.get();
+			}
+		}
+		return fullName;
+	}
+
+	private Collection<String> sshKeys(Collection<String> sshKeys, NamingEnumeration<SearchResult> results)
+			throws NamingException {
+		SearchResult searchResult = (SearchResult) results.next();
+		Attributes searchResultAttributes = searchResult.getAttributes();
+		if (searchResultAttributes != null) {
+			if (getUserSshKeyAttribute() != null)
+				sshKeys = retrieveSshKeys(searchResultAttributes);
+		}
+		return sshKeys;
+	}
+
+	private StringBuffer buffer(UsernamePasswordToken token, Hashtable<String, String> ldapEnv, String userDN,
+			SearchResult searchResult) {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(StringUtils.substringBefore(searchResult.getName(), "//"));
+		buffer.append("//");
+		buffer.append(StringUtils.substringBefore(StringUtils.substringAfter(searchResult.getName(), "//"), "/"));
+		ldapEnv.put(Context.PROVIDER_URL, buffer.toString());
+		logger.debug("Binding to referral ldap url '" + buffer.toString() + "'...");
+		ldapEnv.put(Context.SECURITY_PRINCIPAL, userDN);
+		ldapEnv.put(Context.SECURITY_CREDENTIALS, new String(token.getPassword()));
+		return buffer;
+	}
+
+	private String userDN(NamingEnumeration<SearchResult> results) throws NamingException {
+		SearchResult searchResult = (SearchResult) results.next();
+		String userDN = searchResult.getNameInNamespace();
+		if (userDN.startsWith("ldap")) {
+			userDN = StringUtils.substringAfter(userDN, "//");
+			userDN = StringUtils.substringAfter(userDN, "/");
+		}
+		return userDN;
+	}
+
+	private SearchControls searchControls() {
+		SearchControls searchControls = new SearchControls();
+		searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+		List<String> attributeNames = new ArrayList<String>();
+		if (getUserFullNameAttribute() != null)
+			attributeNames.add(getUserFullNameAttribute());
+		if (getUserSshKeyAttribute() != null)
+			attributeNames.add(getUserSshKeyAttribute());
+		attributeNames.add(getUserEmailAttribute());
+		if (getGroupRetrieval() instanceof GetGroupsUsingAttribute) {
+			GetGroupsUsingAttribute groupRetrieval = (GetGroupsUsingAttribute) getGroupRetrieval();
+			attributeNames.add(groupRetrieval.getUserGroupsAttribute());
+		}
+		searchControls.setReturningAttributes((String[]) attributeNames.toArray(new String[0]));
+		searchControls.setReturningObjFlag(true);
+		return searchControls;
 	}
 	
 	private Collection<String> retrieveGroupsByAttribute(DirContext ctx, DirContext referralCtx, 
