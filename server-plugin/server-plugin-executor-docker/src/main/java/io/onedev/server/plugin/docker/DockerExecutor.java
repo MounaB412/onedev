@@ -70,17 +70,17 @@ import io.onedev.server.web.util.Testable;
 @Horizontal
 public class DockerExecutor extends JobExecutor implements Testable<TestData>, Validatable {
 
+	private DockerExecutorProduct dockerExecutorProduct = new DockerExecutorProduct();
+
 	private static final long serialVersionUID = 1L;
 	
-	private static final Logger logger = LoggerFactory.getLogger(DockerExecutor.class);
+	public static final Logger logger = LoggerFactory.getLogger(DockerExecutor.class);
 
 	private List<RegistryLogin> registryLogins = new ArrayList<>();
 	
 	private int capacity = Runtime.getRuntime().availableProcessors();
 	
 	private String runOptions;
-	
-	private String dockerExecutable;
 	
 	private transient CapacityRunner capacityRunner;
 	
@@ -119,44 +119,13 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 			+ "Leave empty to use docker executable in PATH")
 	@NameOfEmptyValue("Use default")
 	public String getDockerExecutable() {
-		return dockerExecutable;
+		return dockerExecutorProduct.getDockerExecutable();
 	}
 
 	public void setDockerExecutable(String dockerExecutable) {
-		this.dockerExecutable = dockerExecutable;
+		dockerExecutorProduct.setDockerExecutable(dockerExecutable);
 	}
 
-	private Commandline newDocker() {
-		if (getDockerExecutable() != null)
-			return new Commandline(getDockerExecutable());
-		else
-			return new Commandline("docker");
-	}
-	
-	private String getImageOS(SimpleLogger jobLogger, String image) {
-		Commandline docker = newDocker();
-		docker.addArgs("image", "inspect", "-f", "{{.Os}}", image);
-		
-		AtomicReference<String> osRef = new AtomicReference<>(null);
-		docker.execute(new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				osRef.set(line);
-			}
-			
-		}, new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				jobLogger.log(line);
-			}
-			
-		}).checkReturnCode();
-		
-		return Preconditions.checkNotNull(osRef.get());
-	}
-	
 	private synchronized CapacityRunner getCapacityRunner() {
 		if (capacityRunner == null)
 			capacityRunner = new CapacityRunner(capacity);
@@ -172,7 +141,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 				+ jobContext.getBuildNumber() + "-" + jobContext.getRetried();
 		
 		AtomicBoolean networkExists = new AtomicBoolean(false);
-		Commandline docker = newDocker();
+		Commandline docker = dockerExecutorProduct.newDocker();
 		docker.addArgs("network", "ls", "-q", "--filter", "name=" + network);
 		docker.execute(new LineConsumer() {
 
@@ -221,7 +190,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 	private void deleteNetwork(String network, SimpleLogger jobLogger) {
 		clearNetwork(network, jobLogger);
 		
-		Commandline docker = newDocker();
+		Commandline docker = dockerExecutorProduct.newDocker();
 		docker.clearArgs();
 		docker.addArgs("network", "rm", network);
 		docker.execute(new LineConsumer() {
@@ -242,7 +211,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 	}
 	
 	private void clearNetwork(String network, SimpleLogger jobLogger) {
-		Commandline docker = newDocker();
+		Commandline docker = dockerExecutorProduct.newDocker();
 		
 		List<String> containerIds = new ArrayList<>();
 		docker.addArgs("ps", "-a", "-q", "--filter", "network=" + network);
@@ -301,150 +270,6 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 		}
 	}
 	
-	@SuppressWarnings("resource")
-	private void startService(String network, JobService jobService, SimpleLogger jobLogger) {
-		jobLogger.log("Pulling service image...") ;
-		Commandline docker = newDocker();
-		docker.addArgs("pull", jobService.getImage());
-		docker.execute(new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				logger.debug(line);
-			}
-			
-		}, new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				jobLogger.log(line);
-			}
-			
-		}).checkReturnCode();
-		
-		jobLogger.log("Creating service container...");
-		
-		String containerName = network + "-service-" + jobService.getName();
-		docker.clearArgs();
-		docker.addArgs("run", "-d", "--name=" + containerName, "--network=" + network, 
-				"--network-alias=" + jobService.getName());
-		for (EnvVar var: jobService.getEnvVars()) 
-			docker.addArgs("--env", var.getName() + "=" + var.getValue());
-		docker.addArgs(jobService.getImage());
-		if (jobService.getArguments() != null) {
-			for (String token: StringUtils.parseQuoteTokens(jobService.getArguments()))
-				docker.addArgs(token);
-		}
-		
-		docker.execute(new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				
-			}
-			
-		}, new LineConsumer() {
-
-			@Override
-			public void consume(String line) {
-				jobLogger.log(line);
-			}
-			
-		}).checkReturnCode();
-
-		jobLogger.log("Waiting for service to be ready...");
-		
-		boolean isWindows = getImageOS(jobLogger, jobService.getImage()).equalsIgnoreCase("windows");
-		ObjectMapper jsonReader = OneDev.getInstance(ObjectMapper.class);		
-		while (true) {
-			StringBuilder builder = new StringBuilder();
-			docker.clearArgs();
-			docker.addArgs("inspect", containerName);
-			docker.execute(new LineConsumer(StandardCharsets.UTF_8.name()) {
-
-				@Override
-				public void consume(String line) {
-					builder.append(line).append("\n");
-				}
-				
-			}, new LineConsumer() {
-
-				@Override
-				public void consume(String line) {
-					jobLogger.log(line);
-				}
-				
-			}).checkReturnCode();
-
-			JsonNode stateNode;
-			try {
-				stateNode = jsonReader.readTree(builder.toString()).iterator().next().get("State");
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			
-			if (stateNode.get("Status").asText().equals("running")) {
-				docker.clearArgs();
-				docker.addArgs("exec", containerName);
-				if (isWindows) 
-					docker.addArgs("cmd", "/c", jobService.getReadinessCheckCommand());
-				else 
-					docker.addArgs("sh", "-c", jobService.getReadinessCheckCommand());
-				
-				ExecutionResult result = docker.execute(new LineConsumer() {
-
-					@Override
-					public void consume(String line) {
-						jobLogger.log("Service readiness check: " + line);
-					}
-					
-				}, new LineConsumer() {
-
-					@Override
-					public void consume(String line) {
-						jobLogger.log("Service readiness check: " + line);
-					}
-					
-				});
-				if (result.getReturnCode() == 0) {
-					jobLogger.log("Service is ready");
-					break;
-				}
-			} else if (stateNode.get("Status").asText().equals("exited")) {
-				if (stateNode.get("OOMKilled").asText().equals("true"))  
-					jobLogger.log("Out of memory");
-				else if (stateNode.get("Error").asText().length() != 0)  
-					jobLogger.log(stateNode.get("Error").asText());
-				
-				docker.clearArgs();
-				docker.addArgs("logs", containerName);
-				docker.execute(new LineConsumer(StandardCharsets.UTF_8.name()) {
-
-					@Override
-					public void consume(String line) {
-						jobLogger.log(line);
-					}
-					
-				}, new LineConsumer(StandardCharsets.UTF_8.name()) {
-
-					@Override
-					public void consume(String line) {
-						jobLogger.log(line);
-					}
-					
-				}).checkReturnCode();
-				
-				throw new ExplicitException(String.format("Service '" + jobService.getName() + "' is stopped unexpectedly"));
-			}
-			
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}		
-	}
-	
 	@Override
 	public void execute(String jobToken, JobContext jobContext) {
 		File hostBuildHome = FileUtils.createTempDir("onedev-build");
@@ -478,7 +303,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 					login(jobLogger);
 
 					jobLogger.log("Pulling job image...") ;
-					Commandline docker = newDocker();
+					Commandline docker = dockerExecutorProduct.newDocker();
 					docker.addArgs("pull", jobContext.getImage());
 					docker.execute(new LineConsumer() {
 
@@ -496,13 +321,13 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 						
 					}).checkReturnCode();
 					
-					boolean isWindows = getImageOS(jobLogger, jobContext.getImage()).equalsIgnoreCase("windows");
+					boolean isWindows = dockerExecutorProduct.getImageOS(jobLogger, jobContext.getImage()).equalsIgnoreCase("windows");
 
 					String network = createNetwork(jobContext, isWindows, jobLogger);
 					try {
 						for (JobService jobService: jobContext.getServices()) {
 							jobLogger.log("Starting service (name: " + jobService.getName() + ", image: " + jobService.getImage() + ")...");
-							startService(network, jobService, jobLogger);
+							dockerExecutorProduct.startService(network, jobService, jobLogger);
 						}
 						
 						File workspaceCache = null;
@@ -583,7 +408,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 										 * We need to update submodules within a helper image in order to use our own .ssh folder. 
 										 * Specifying HOME env to change ~/.ssh folder does not have effect on Linux 
 										 */
-										Commandline cmd = newDocker();
+										Commandline cmd = dockerExecutorProduct.newDocker();
 										String containerName = network + "-submodule-update-helper";
 										String homeOuterPath = getOuterPath(hostHome.getAbsolutePath());
 										String workspaceOuterPath = getOuterPath(hostWorkspace.getAbsolutePath());
@@ -600,7 +425,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 											@Override
 											public void kill(Process process, String executionId) {
 												jobLogger.log("Stopping submodule update helper container...");
-												Commandline cmd = newDocker();
+												Commandline cmd = dockerExecutorProduct.newDocker();
 												cmd.addArgs("stop", containerName);
 												cmd.execute(new LineConsumer() {
 			
@@ -710,7 +535,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 									@Override
 									public void kill(Process process, String executionId) {
 										jobLogger.log("Stopping job container...");
-										Commandline cmd = newDocker();
+										Commandline cmd = dockerExecutorProduct.newDocker();
 										cmd.addArgs("stop", containerName);
 										cmd.execute(new LineConsumer() {
 	
@@ -777,7 +602,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 				jobLogger.log(String.format("Login to docker registry '%s'...", login.getRegistryUrl()));
 			else
 				jobLogger.log("Login to official docker registry...");
-			Commandline cmd = newDocker();
+			Commandline cmd = dockerExecutorProduct.newDocker();
 			cmd.addArgs("login", "-u", login.getUserName(), "--password-stdin");
 			if (login.getRegistryUrl() != null)
 				cmd.addArgs(login.getRegistryUrl());
@@ -863,7 +688,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 		if (outerInstallPath == null) {
 			if (Bootstrap.isInDocker()) {
 				AtomicReference<String> installDirRef = new AtomicReference<>(null);
-				Commandline docker = newDocker();
+				Commandline docker = dockerExecutorProduct.newDocker();
 				String inspectFormat = String.format(
 						"{{range .Mounts}} {{if eq .Destination \"%s\"}} {{.Source}} {{end}} {{end}}", 
 						hostInstallPath);
@@ -898,7 +723,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 		
 		jobLogger.log("Pulling image...");
 		
-		Commandline cmd = newDocker();
+		Commandline cmd = dockerExecutorProduct.newDocker();
 		cmd.addArgs("pull", testData.getDockerImage());
 		cmd.execute(new LineConsumer() {
 
@@ -916,7 +741,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 			
 		}).checkReturnCode();
 		
-		boolean windows = getImageOS(jobLogger, testData.getDockerImage()).equals("windows");
+		boolean windows = dockerExecutorProduct.getImageOS(jobLogger, testData.getDockerImage()).equals("windows");
 		
 		jobLogger.log("Running container...");
 		File workspaceDir = null;
@@ -974,7 +799,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 		
 		if (!SystemUtils.IS_OS_WINDOWS) {
 			jobLogger.log("Checking busybox...");
-			cmd = newDocker();
+			cmd = dockerExecutorProduct.newDocker();
 			cmd.addArgs("run", "--rm", "busybox", "sh", "-c", "echo hello from busybox");			
 			cmd.execute(new LineConsumer() {
 
@@ -998,7 +823,7 @@ public class DockerExecutor extends JobExecutor implements Testable<TestData>, V
 		if (SystemUtils.IS_OS_WINDOWS || Bootstrap.isInDocker()) {
 			FileUtils.cleanDir(dir);
 		} else {
-			Commandline cmd = newDocker();
+			Commandline cmd = dockerExecutorProduct.newDocker();
 			String containerPath = "/dir-to-clean";
 			cmd.addArgs("run", "-v", dir.getAbsolutePath() + ":" + containerPath, "--rm", 
 					"busybox", "sh", "-c", "rm -rf " + containerPath + "/*");			
