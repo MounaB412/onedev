@@ -51,23 +51,6 @@ public class GitPreReceiveCallback extends HttpServlet {
 		this.projectManager = projectManager;
 	}
 	
-	private void error(Output output, @Nullable String refName, List<String> messages) {
-		output.markError();
-		output.writeLine();
-		output.writeLine("*******************************************************");
-		output.writeLine("*");
-		if (refName != null)
-			output.writeLine("*  ERROR PUSHING REF: " + refName);
-		else
-			output.writeLine("*  ERROR PUSHING");
-		output.writeLine("-------------------------------------------------------");
-		for (String message: messages)
-			output.writeLine("*  " + message);
-		output.writeLine("*");
-		output.writeLine("*******************************************************");
-		output.writeLine();
-	}
-	
 	@Sessional
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -133,7 +116,7 @@ public class GitPreReceiveCallback extends HttpServlet {
 
 	    		if (refName.startsWith(PullRequest.REFS_PREFIX) || refName.startsWith(PullRequestUpdate.REFS_PREFIX)) {
 	    			if (!user.asSubject().isPermitted(new ProjectPermission(project, new ManageProject()))) {
-	    				error(output, refName, Lists.newArrayList("Only project administrators can update onedev refs."));
+	    				output.error(refName, Lists.newArrayList("Only project administrators can update onedev refs."));
 	    				break;
 	    			}
 	    		} else if (refName.startsWith(Constants.R_HEADS)) {
@@ -166,7 +149,7 @@ public class GitPreReceiveCallback extends HttpServlet {
 	    				}
 	    			}
 					if (!errorMessages.isEmpty())
-						error(output, refName, errorMessages);
+						output.error(refName, errorMessages);
 	    		} else if (refName.startsWith(Constants.R_TAGS)) {
 	    			String tagName = Preconditions.checkNotNull(GitUtils.ref2tag(refName));
 	    			List<String> errorMessages = new ArrayList<>();
@@ -188,7 +171,7 @@ public class GitPreReceiveCallback extends HttpServlet {
 	    				}
 	    			}
 					if (!errorMessages.isEmpty())
-						error(output, refName, errorMessages);
+						output.error(refName, errorMessages);
 	    		}
 	    		
 	        	field = field.substring(40);
