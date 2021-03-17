@@ -134,19 +134,8 @@ public abstract class FieldSpec extends InputSpec {
 			FieldSpec field = getIssueSetting().getFieldSpec(showCondition.getInputName());
 			SpecifiedChoices specifiedChoices = SpecifiedChoices.of(field);
 			if (specifiedChoices != null) {
-				if (showCondition.getValueMatcher() instanceof ValueIsOneOf) {
-					ValueIsOneOf valueIsOneOf = (ValueIsOneOf) showCondition.getValueMatcher(); 
-					for (String value: valueIsOneOf.getValues()) {
-						if (!specifiedChoices.getChoiceValues().contains(value))
-							undefinedFieldValues.add(new UndefinedFieldValue(field.getName(), value));
-					}
-				} else if (showCondition.getValueMatcher() instanceof ValueIsNotAnyOf) {
-					ValueIsNotAnyOf valueIsNotAnyOf = (ValueIsNotAnyOf) showCondition.getValueMatcher(); 
-					for (String value: valueIsNotAnyOf.getValues()) {
-						if (!specifiedChoices.getChoiceValues().contains(value))
-							undefinedFieldValues.add(new UndefinedFieldValue(field.getName(), value));
-					}
-				}
+				showCondition.getValueMatcher().getUndefinedFieldValues(showCondition, specifiedChoices,
+						undefinedFieldValues, field, this);
 			}
 		}
 		return undefinedFieldValues;

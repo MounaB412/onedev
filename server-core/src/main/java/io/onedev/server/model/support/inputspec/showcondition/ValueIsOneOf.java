@@ -1,5 +1,6 @@
 package io.onedev.server.model.support.inputspec.showcondition;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.validation.constraints.Size;
@@ -13,7 +14,10 @@ import com.google.common.collect.Lists;
 
 import io.onedev.server.model.support.inputspec.InputContext;
 import io.onedev.server.model.support.inputspec.InputSpec;
+import io.onedev.server.model.support.inputspec.choiceinput.choiceprovider.SpecifiedChoices;
+import io.onedev.server.model.support.issue.fieldspec.FieldSpec;
 import io.onedev.server.util.EditContext;
+import io.onedev.server.web.component.issue.workflowreconcile.UndefinedFieldValue;
 import io.onedev.server.web.editable.annotation.ChoiceProvider;
 import io.onedev.server.web.editable.annotation.Editable;
 import io.onedev.server.web.editable.annotation.OmitName;
@@ -56,6 +60,14 @@ public class ValueIsOneOf implements ValueMatcher {
 	@Override
 	public boolean matches(List<String> values) {
 		return CollectionUtils.containsAny(getValues(), values);
+	}
+
+	public void getUndefinedFieldValues(ShowCondition showCondition, SpecifiedChoices specifiedChoices,
+			Collection<UndefinedFieldValue> undefinedFieldValues, FieldSpec field, FieldSpec fieldSpec) {
+		for (String value : this.getValues()) {
+			if (!specifiedChoices.getChoiceValues().contains(value))
+				undefinedFieldValues.add(new UndefinedFieldValue(fieldSpec.getName(), value));
+		}
 	}
 	
 }
