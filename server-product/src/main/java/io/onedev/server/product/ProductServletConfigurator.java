@@ -48,14 +48,14 @@ public class ProductServletConfigurator implements ServletConfigurator {
 	private final WebSocketManager webSocketManager;
 	
 	@Inject
-	public ProductServletConfigurator(ServerConfig serverConfig, ShiroFilter shiroFilter, GitFilter gitFilter, 
-			GitPreReceiveCallback preReceiveServlet, GitPostReceiveCallback postReceiveServlet, 
-			WicketServlet wicketServlet, WebSocketManager webSocketManager, ServletContainer jerseyServlet) {
+	public ProductServletConfigurator(ServerConfig serverConfig, ShiroFilter shiroFilter, ProductServletGitParameters gitParameters, 
+			WicketServlet wicketServlet, WebSocketManager webSocketManager, 
+			ServletContainer jerseyServlet) {
 		this.serverConfig = serverConfig;
 		this.shiroFilter = shiroFilter;
-        this.gitFilter = gitFilter;
-		this.preReceiveServlet = preReceiveServlet;
-		this.postReceiveServlet = postReceiveServlet;
+        this.gitFilter = gitParameters.gitFilter;
+		this.preReceiveServlet = gitParameters.preReceiveServlet;
+		this.postReceiveServlet = gitParameters.postReceiveServlet;
 		this.wicketServlet = wicketServlet;
 		this.webSocketManager = webSocketManager;
 		this.jerseyServlet = jerseyServlet;
